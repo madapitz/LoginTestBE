@@ -1,41 +1,12 @@
 const express = require('express');
 const cp = require('cookie-parser');
 const bp = require('body-parser');
-const { Pool, Client } = require('pg');
+// const { Pool, Client } = require('pg');
 const passport = require('passport');
 
 const app = express();
 
 const port = 3000;
-
-//Conexion a bd
-const pool = new Pool({
-	user: 'postgres',
-	host: 'localhost',
-	database: 'logindb',
-	password: 'postgres',
-	port: 5432
-});
-
-pool.query('SELECT NOW()', (err, res) => {
-	console.log(err, res);
-	pool.end();
-});
-
-const client = new Client({
-	user: 'postgres',
-	host: 'localhost',
-	database: 'logindb',
-	password: 'postgres',
-	port: 5432
-});
-
-client.connect();
-
-client.query('SELECT NOW()', (err, res) => {
-	console.log(err, res);
-	client.end();
-});
 
 //inicializar la configuracion de passport.js
 app.use(passport.initialize());
@@ -50,10 +21,10 @@ app.use(bp.json());
 //Middleware personalizado que muestra cada request
 //que pasa por el api
 app.use((req,res,next) => {
-	if (req.body) log.info(req.body);
-	if (req.params) log.info(req.params);
-	if (req.query) log.info(req.query);
-	log.info(`Recibido ${req.method} request de ${req.ip} para ${req.url}`);
+	if (req.body) console.log(req.body);
+	if (req.params) console.log(req.params);
+	if (req.query) console.log(req.query);
+	console.log(`Recibido ${req.method} request de ${req.ip} para ${req.url}`);
 
 	next();
 });
