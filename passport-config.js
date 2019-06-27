@@ -12,11 +12,11 @@ module.exports = passport => {
 		new Strategy(opts, async (payload, done) => {
 			try {
 				const user = await pool.query('SELECT u_id, u_email FROM usuario WHERE u_username = $1', [payload.username])
-				if(user.length > 0) {
+				if(user.rows.length > 0) {
 					return done(null, {
-						id: user[0].u_id,
-						name: user[0].u_fname,
-						email: user[0].u_email
+						id: user.rows[0].u_id,
+						name: user.rows[0].u_fname,
+						email: user.rows[0].u_email
 					})
 				}
 

@@ -64,35 +64,62 @@ router.post('/register', async (req, res) => {
 router.post('/login', async (req,res) => {
 	const email = req.body.email;
 	const password = req.body.password;
-	let checkEmail = await pool.query('SELECT u_password, u_id, u_username FROM usuario WHERE u_email = $1',[email]);
 
-	if (checkEmail.rows.length === 0) {
-		let error = "No account found";
-		return res.status(404).json(error);
+	try {
+		let checkEmail = await pool.query('SELECT u_password, u_id, u_username FROM usuario WHERE u_email = $1',[email]);
+		if (checkEmail.rows.length === 0) {
+			let error = "No account found";
+			return res.status(404).json(error);
+		}
+
+		let isMatch = bcrypt.compare(password, checkEmail.rows[0].u_password);
+
+		
+
+		if (isMatch) {
+			const payload = {
+				id: checkEmail.rows[0].u_id,
+				name: checkEmail.rows[0].u_username
+			};
+
+			jwt.sign(payload, secret, {expiresIn: 36000}, (err, token) => {
+				if (err) return res.status(500).json({error: "Error signing token", raw: err});
+
+				return res.json({success: true, token: `${token}`});
+			});
+		} else {
+			return res.status(400).json({
+				error: "Password is incorrect"
+			});
+		}
+
+	} catch (err) {
+		console.log(err)
 	}
+
 	// console.log(checkEmail.rows)
-	bcrypt.compare(password, checkEmail.rows[0].password)
-		.then(isMatch => {
-			if (isMatch) {
-				const payload = {
-					id: checkEmail.rows[0].u_id,
-					name: checkEmail.rows[0].u_username
-				};
+	// bcrypt.compare(password, checkEmail.rows[0].password)
+	// 	.then(isMatch => {
+	// 		if (isMatch) {
+	// 			const payload = {
+	// 				id: checkEmail.rows[0].u_id,
+	// 				name: checkEmail.rows[0].u_username
+	// 			};
 
-				jwt.sign(payload, secret, {expiresIn: 36000}, (err, token) => {
-					if (err) return res.status(500).json({error: "Error signing token", raw: err});
+	// 			jwt.sign(payload, secret, {expiresIn: 36000}, (err, token) => {
+	// 				if (err) return res.status(500).json({error: "Error signing token", raw: err});
 
-					return res.json({success: true, token: `Bearer ${token}`});
-				});
-			} else {
-				return res.status(400).json({
-					error: "Password is incorrect"
-				});
-			}
-		})
-		.catch(err => {
-			console.log(err)
-		});
+	// 				return res.json({success: true, token: `Bearer ${token}`});
+	// 			});
+	// 		} else {
+	// 			return res.status(400).json({
+	// 				error: "Password is incorrect"
+	// 			});
+	// 		}
+	// 	})
+	// 	.catch(err => {
+	// 		console.log(err)
+	// 	});
 });
 
 module.exports = router;
